@@ -18,6 +18,8 @@ SvaraAI merupakan bot serbaguna berbasis **Artificial Intelligence** yang diranc
 ### 🤖 Coba Bot di Telegram:
 Silakan cari username berikut di Telegram untuk mencoba langsung:
 **[@svaraai_bot](https://t.me/@svaraai_bot)**
+<img width="2765" height="3166" alt="image" src="https://github.com/user-attachments/assets/4fab39fc-8600-4c63-bb44-49eb753455d9" />
+
 
 ### 🌐 Dokumentasi API (Swagger UI):
 Untuk pengujian integrasi Frontend/Web, akses dokumentasi API di sini:
