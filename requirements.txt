@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-telegram-bot
+edge-tts
+python-docx
+PyPDF2
+python-multipart
+google-generativeai
+python-dotenv
+Pillow
