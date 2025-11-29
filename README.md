@@ -17,7 +17,7 @@ SvaraAI merupakan bot serbaguna berbasis **Artificial Intelligence** yang diranc
 
 ### 🤖 Coba Bot di Telegram:
 Silakan cari username berikut di Telegram untuk mencoba langsung:
-**[@USERNAME_BOT_ANDA](https://t.me/USERNAME_BOT_ANDA)**
+**[@svaraai_bot](https://t.me/@svaraai_bot)**
 *(Ganti dengan username bot asli Anda, misal @SvaraUAS_Bot)*
 
 ### 🌐 Dokumentasi API (Swagger UI):
@@ -29,27 +29,25 @@ Untuk pengujian integrasi Frontend/Web, akses dokumentasi API di sini:
 
 ## ✨ Fitur Utama & Teknologi
 
-SvaraAI dibangun menggunakan teknologi _State-of-the-Art_ (SOTA) di bidang NLP:
+SvaraAI dibangun menggunakan teknologi sebagai berikut:
 
-### 1. 📄 Optical Character Recognition (OCR) Cerdas
+### 1. 📄 Optical Character Recognition (OCR)
 Mengekstrak teks dari foto buku, catatan tangan, atau dokumen cetak.
 * **Teknologi:** `Google Gemini 2.0 Flash (Vision)`
-* **Kelebihan:** Tidak ada limit 1MB, mampu membaca gambar HD, dan auto-koreksi teks yang buram.
-
+  
 ### 2. 📝 Ringkasan Teks Otomatis (Abstractive)
 Meringkas dokumen panjang menjadi paragraf narasi yang mengalir (bukan sekadar poin-poin kaku).
 * **Teknologi:** `Google Gemini 2.0 Flash (LLM)`
-* **Metode:** *Abstractive Summarization* (Menulis ulang inti sari dengan gaya bahasa penyiar radio).
 
 ### 3. 🌍 Terjemahan Kontekstual
 Menerjemahkan dokumen dengan memahami konteks kalimat, bukan kata-per-kata.
 * **Teknologi:** `Google Gemini 2.0 Flash`
-* **Bahasa Support:** 🇮🇩 Indonesia, 🇺🇸 Inggris, 🇯🇵 Jepang, 🇰🇷 Korea, 🇸🇦 Arab.
 
 ### 4. 🔊 Neural Text-to-Speech (TTS)
 Mengubah teks menjadi suara manusia yang sangat natural (ada intonasi dan helaan napas).
 * **Teknologi:** `Edge-TTS` (Microsoft Azure Neural Speech).
 * **Fitur:** Tersedia pilihan suara **Pria & Wanita** untuk setiap bahasa.
+* **Bahasa Support:** 🇮🇩 Indonesia, 🇺🇸 Inggris, 🇯🇵 Jepang, 🇰🇷 Korea, 🇸🇦 Arab.
 
 ### 5. 📦 Smart File Handling
 * **Statistik:** Menampilkan jumlah kata & huruf secara realtime.
@@ -63,7 +61,7 @@ Ikuti langkah ini untuk menjalankan di komputer lokal (Localhost):
 
 ### 1. Clone Repository
 ```bash
-git clone [https://github.com/username-anda/svaraai-bot.git](https://github.com/username-anda/svaraai-bot.git)
+git clone [https://github.com/rifkyadiii/svaraai-bot.git](https://github.com/rifkyadiii/svaraai-bot.git)
 cd svaraai-bot
 ````
 
@@ -101,14 +99,12 @@ python main.py
 
 ## 📂 Struktur Proyek
 
-Kode ditulis secara **Modular** untuk kemudahan pengembangan (Clean Code):
-
 ```text
 svaraai_bot/
 │── main.py           # Entry Point (Server FastAPI & Loader Bot)
 │── handlers.py       # Logika Interaksi Bot Telegram (Menu, Button, Reply)
 │── services.py       # "Otak" AI (Logic Gemini, OCR, TTS, Translate)
-│── api_routes.py     # Endpoint REST API (Untuk akses Frontend/Flutter)
+└── api/routes.py     # Endpoint REST API (Untuk akses Frontend/Flutter)
 │── config.py         # Konfigurasi Global & Environment Variables
 │── .env              # File Rahasia (Token & Key)
 └── requirements.txt  # Daftar Pustaka Python
