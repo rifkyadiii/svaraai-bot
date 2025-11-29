@@ -64,6 +64,8 @@ Ikuti langkah ini untuk menjalankan di komputer lokal (Localhost):
 ### 1. Clone Repository
 ```bash
 git clone [https://github.com/rifkyadiii/svaraai-bot.git](https://github.com/rifkyadiii/svaraai-bot.git)
+````
+```bash
 cd svaraai-bot
 ````
 
@@ -106,7 +108,8 @@ svaraai_bot/
 │── main.py           # Entry Point (Server FastAPI & Loader Bot)
 │── handlers.py       # Logika Interaksi Bot Telegram (Menu, Button, Reply)
 │── services.py       # "Otak" AI (Logic Gemini, OCR, TTS, Translate)
-└── api/routes.py     # Endpoint REST API (Untuk akses Frontend/Flutter)
+│── api
+│   └── routes.py     # Endpoint REST API (Untuk akses Frontend/Flutter)
 │── config.py         # Konfigurasi Global & Environment Variables
 │── .env              # File Rahasia (Token & Key)
 └── requirements.txt  # Daftar Pustaka Python
