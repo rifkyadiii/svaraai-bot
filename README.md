@@ -9,7 +9,7 @@
 
 ## 🔍 Tentang SvaraAI
 
-SvaraAI merupakan bot serbaguna berbasis **Artificial Intelligence** yang dirancang untuk membantu mahasiswa dan profesional memproses dokumen dengan cepat. Proyek ini menggunakan arsitektur **Hybrid**, berfungsi sebagai Bot Telegram interaktif sekaligus REST API.
+SvaraAI merupakan bot serbaguna berbasis **Artificial Intelligence** yang dirancang untuk membantu mahasiswa dan profesional memproses dokumen dengan cepat. Proyek ini menggunakan arsitektur **Hybrid**, berfungsi sebagai Bot Telegram interaktif sekaligus REST API (untuk keperluan scalable kedepannya).
 
 ---
 
@@ -24,9 +24,8 @@ Silakan cari username berikut di Telegram untuk mencoba langsung:
 </p>
 
 ### 🌐 Dokumentasi API (Swagger UI):
-Untuk pengujian integrasi Frontend/Web, akses dokumentasi API di sini:
-**[https://NAMA-PROJECT-RENDER.onrender.com](https://NAMA-PROJECT-RENDER.onrender.com)**
-*(Ganti dengan URL Render Anda)*
+Untuk pengujian, akses dokumentasi API di sini:
+**[https://svaraai-bot.onrender.com](https://svaraai-bot.onrender.com)**
 
 ---
 
