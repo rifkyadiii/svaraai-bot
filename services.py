@@ -1,10 +1,10 @@
 import os
 import re
 import asyncio
+import subprocess  # <--- IMPORT PENTING
 import google.generativeai as genai
 from PIL import Image
 import io
-import edge_tts
 import PyPDF2
 import docx
 import config
@@ -17,10 +17,9 @@ LANG_NAMES = {
     'id': 'Indonesian', 'en': 'English', 'ja': 'Japanese', 'ko': 'Korean', 'ar': 'Arabic'
 }
 
-# Flag Error Internal
 INTERNAL_ERROR_FLAG = "INTERNAL_ERROR: "
 
-# --- HELPER: PEMBERSIH FORMAT TEKS ---
+# --- HELPER CLEANER ---
 def clean_text_formatting(text: str) -> str:
     if not text: return ""
     text = re.sub(r'\n{3,}', '\n\n', text)
@@ -28,15 +27,13 @@ def clean_text_formatting(text: str) -> str:
     cleaned_lines = []
     for line in lines:
         line = line.strip()
-        if not line:
-            cleaned_lines.append("") 
-        else:
-            cleaned_lines.append(line)
+        if not line: cleaned_lines.append("") 
+        else: cleaned_lines.append(line)
     text = "\n".join(cleaned_lines)
     text = re.sub(r'[ \t]+', ' ', text)
     return text.strip()
 
-# --- 1. OCR DENGAN GEMINI ---
+# --- 1. OCR ---
 def ocr_with_gemini(image_bytes) -> str:
     try:
         image = Image.open(io.BytesIO(image_bytes))
@@ -51,54 +48,42 @@ def ocr_with_gemini(image_bytes) -> str:
 def summarize_text(text: str) -> str:
     try:
         prompt = (
-            "You are a professional editor. Your goal is to summarize the text concisely. "
-            "1. The summary MUST be significantly shorter than the original text. "
-            "2. Do NOT use introductory phrases. "
-            "3. Start directly with the main content. "
-            "4. Combine main ideas into flowing paragraphs. "
-            "5. Do NOT use bullet points. "
-            "6. Respond in the same language as the original text.\n\n"
-            f"TEXT TO SUMMARIZE:\n{text[:config.MAX_CHARS]}"
+            "You are a professional editor. Summarize the text concisely. "
+            "Do NOT use intro phrases. Start directly. No bullet points. "
+            f"TEXT:\n{text[:config.MAX_CHARS]}"
         )
         response = model.generate_content(prompt)
-        if not response.text:
-            return f"{INTERNAL_ERROR_FLAG}AI tidak menghasilkan output."
+        if not response.text: return f"{INTERNAL_ERROR_FLAG}AI Error."
         
-        clean_text = response.text.strip().replace("* ", "").replace("- ", "").replace("• ", "").replace("**", "")
-        return clean_text_formatting(clean_text)
+        clean = response.text.strip().replace("* ", "").replace("- ", "")
+        return clean_text_formatting(clean)
     except Exception as e:
-        return f"{INTERNAL_ERROR_FLAG}Gagal Meringkas: {str(e)}"
+        return f"{INTERNAL_ERROR_FLAG}Gagal Ringkas: {str(e)}"
 
 # --- 3. TRANSLATOR ---
 def translate_text(text: str, target_lang_code: str) -> str:
     try:
         if text.startswith(INTERNAL_ERROR_FLAG): return text
-
         target_lang_name = LANG_NAMES.get(target_lang_code, 'English')
         prompt = (
-            f"Translate the following text into natural, native-sounding {target_lang_name}. "
-            "STRICT RULES:\n"
-            f"1. If the text is ALREADY in {target_lang_name}, RETURN IT EXACTLY AS IS. DO NOT PARAPHRASE.\n"
-            "2. If it is in a different language, translate it accurately.\n"
-            "3. Do not add explanations.\n"
-            "Just output the translation directly.\n\n"
+            f"Translate to natural {target_lang_name}. "
+            f"If text is already {target_lang_name}, RETURN AS IS. "
             f"TEXT:\n{text[:config.MAX_CHARS]}"
         )
         response = model.generate_content(prompt)
         if not response.text: return text
         return clean_text_formatting(response.text)
     except Exception as e:
-        print(f"Error Translate: {e}")
         return f"{INTERNAL_ERROR_FLAG}Gagal Translate: {str(e)}"
 
-# --- 4. TTS GENERATOR (STREAMING MANUAL + RETRY) ---
+# --- 4. TTS GENERATOR (SUBPROCESS METHOD - RENDER FIX) ---
 
 def split_text_smartly(text, limit):
     chunks = []
     current_chunk = ""
-    text = text.replace('"', '').replace("'", "").replace("’", "")
+    text = text.replace('"', '').replace("'", "").replace("`", "") # Hapus quote biar command line aman
     text = " ".join(text.split())
-    sentences = text.replace('Dr.', 'Dr').replace('Mr.', 'Mr').split('. ') 
+    sentences = text.replace('Dr.', 'Dr').split('. ') 
     
     for sentence in sentences:
         if len(current_chunk) + len(sentence) < limit:
@@ -109,6 +94,29 @@ def split_text_smartly(text, limit):
     if current_chunk:
         chunks.append(current_chunk.strip())
     return chunks
+
+async def run_edge_tts_command(text, voice, output_file):
+    """Menjalankan edge-tts lewat terminal (Subprocess)"""
+    try:
+        # Kita panggil library edge-tts lewat command line
+        # Ini menghindari konflik asyncio di dalam Python
+        process = await asyncio.create_subprocess_exec(
+            "edge-tts",
+            "--text", text,
+            "--voice", voice,
+            "--write-media", output_file,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+        
+        if process.returncode != 0:
+            print(f"TTS CMD Error: {stderr.decode()}")
+            return False
+        return True
+    except Exception as e:
+        print(f"Subprocess Exception: {e}")
+        return False
 
 async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, progress_callback=None) -> str:
     try:
@@ -127,27 +135,18 @@ async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, p
 
             temp_file = f"temp_{user_id}_part{i}.mp3"
             
-            # RETRY 3X DENGAN METODE STREAMING (ANTI GAGAL RENDER)
+            # --- RETRY LOGIC (3x) ---
             success = False
             for attempt in range(3):
-                try:
-                    communicate = edge_tts.Communicate(chunk, selected_voice)
-                    # TEKNIK BARU: Tulis manual byte per byte
-                    with open(temp_file, "wb") as file:
-                        async for stream_chunk in communicate.stream():
-                            if stream_chunk["type"] == "audio":
-                                file.write(stream_chunk["data"])
-                    
-                    # Cek size file, kalau 0 byte berarti gagal
-                    if os.path.getsize(temp_file) > 0:
+                # PANGGIL LEWAT SUBPROCESS
+                if await run_edge_tts_command(chunk, selected_voice, temp_file):
+                    # Cek file size > 0
+                    if os.path.exists(temp_file) and os.path.getsize(temp_file) > 0:
                         success = True
                         break
-                    else:
-                        print(f"⚠️ Part {i} kosong (0 bytes). Retry...")
-                        
-                except Exception as e:
-                    print(f"TTS Retry {attempt+1}/3: {e}")
-                    await asyncio.sleep(2)
+                
+                # Jika gagal, tunggu sebentar
+                await asyncio.sleep(2)
             
             if not success: return None
             temp_files.append(temp_file)
@@ -186,7 +185,6 @@ def extract_document_content(file_path: str) -> str:
         elif file_path.endswith('.txt'):
             with open(file_path, 'r', encoding='utf-8') as f: text = f.read()
     except Exception as e:
-        print(f"Error Read File: {e}")
         return f"{INTERNAL_ERROR_FLAG}Gagal Baca File: {str(e)}"
     
     return clean_text_formatting(text)
