@@ -23,10 +23,6 @@ Silakan cari username berikut di Telegram untuk mencoba langsung:
   <img src="https://github.com/user-attachments/assets/105e8f68-914a-4d0d-bde9-03cace50436d" width="250" />
 </p>
 
-### 🌐 Dokumentasi API:
-Untuk pengujian, akses dokumentasi API di sini:
-**[https://svaraai-bot.onrender.com](https://svaraai-bot.onrender.com)**
-
 ---
 
 ## ✨ Fitur Utama & Teknologi
