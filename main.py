@@ -20,17 +20,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# --- KONFIGURASI REQUEST (AGAR TIDAK TIMEOUT) ---
-# Kita set timeout jadi 600 detik (10 menit) untuk jaga-jaga file besar
+# --- KONFIGURASI REQUEST ---
 t_request = HTTPXRequest(
     connection_pool_size=8,
-    read_timeout=600.0,  # Waktu tunggu respon Telegram
-    write_timeout=600.0, # Waktu tunggu UPLOAD file (Penting!)
+    read_timeout=600.0,  
+    write_timeout=600.0, 
     connect_timeout=60.0
 )
 
 # --- SETUP BOT TELEGRAM ---
-# Masukkan request=t_request ke dalam builder
 bot_app = ApplicationBuilder().token(config.TOKEN).request(t_request).build()
 
 # Register Command
@@ -47,13 +45,12 @@ bot_app.add_handler(CallbackQueryHandler(handlers.callback_handler))
 # --- SETUP FASTAPI ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- TAMBAHAN 2: BERSIH-BERSIH SAAT STARTUP ---
     logger.info("Membersihkan file sampah (.mp3 & .txt)...")
     for file in glob.glob("*.mp3"):
         try: os.remove(file)
         except: pass
-    for file in glob.glob("*.txt"): # Hapus sisa txt juga
-        if "requirements.txt" not in file: # Jangan hapus requirements!
+    for file in glob.glob("*.txt"): 
+        if "requirements.txt" not in file: 
             try: os.remove(file)
             except: pass
     
@@ -91,8 +88,6 @@ async def index():
     return RedirectResponse(url="/docs")
 
 if __name__ == "__main__":
-    # uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
     
-
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

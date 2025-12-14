@@ -139,7 +139,7 @@ async def set_mode(update: Update, context: ContextTypes.DEFAULT_TYPE, mode: str
 
 async def cmd_summarize(u, c): await set_mode(u, c, 'summarize')
 async def cmd_translate(u, c): await set_mode(u, c, 'translate')
-async def cmd_tts(u, c): await set_mode(u, c, 'auto') # TTS kita anggap auto saja biar fleksibel
+async def cmd_tts(u, c): await set_mode(u, c, 'auto')
 async def cmd_stop(u, c):
     c.user_data.clear()
     await u.message.reply_text("🛑 Bot Dihentikan. Ketik /start untuk mulai.")
@@ -188,13 +188,12 @@ async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stats = f"{w_count} kata"
         await update.message.reply_text(f"📊 **Input Diterima** | {stats}", parse_mode='Markdown')
 
-        # --- LOGIKA ROUTING BERDASARKAN MODE ---
         if current_mode == 'summarize':
             await execute_summarize(update, context, msg_id, text_result)
         elif current_mode == 'translate':
             await update.message.reply_text("🌐 Pilih Bahasa Terjemahan:", reply_markup=create_lang_kb(msg_id, 'trans'))
         else:
-            # AUTO MODE (Default)
+            
             if w_count > 200:
                 kb = [[InlineKeyboardButton("🧠 Rangkum Teks", callback_data=f'sum_{msg_id}'),
                        InlineKeyboardButton("📖 Baca Full Teks", callback_data=f'setmode_tts_{msg_id}')]]
@@ -216,14 +215,11 @@ async def execute_summarize(update_obj, context, data_id, raw_text, is_final=Fal
     context.user_data[f'text_{data_id}'] = summary 
     await send_text_result(message, summary, "Hasil Ringkasan")
     
-    # --- LOGIKA CERDAS: AUTO MODE vs COMMAND MODE ---
     current_mode = context.user_data.get('mode', 'auto')
     
     if current_mode == 'auto':
-        # Jika mode AUTO: Langsung tawarkan TTS (Jalan Tol)
         await message.reply_text("🗣️ Pilih Bahasa untuk Membaca Ringkasan:", reply_markup=create_lang_kb(data_id, 'tts'))
     else:
-        # Jika mode COMMAND (/summarize): Tawarkan Opsi (Fleksibel)
         if is_final:
             await message.reply_text("Opsi Terakhir:", reply_markup=create_terminal_kb(data_id))
         else:
@@ -242,11 +238,9 @@ async def execute_translate_only(update_obj, context, data_id, lang_code, is_fin
     context.user_data[f'text_{data_id}'] = final_text 
     await send_text_result(message, final_text, f"Hasil Terjemahan Bahasa {lang_name}")
     
-    # --- LOGIKA CERDAS ---
     current_mode = context.user_data.get('mode', 'auto')
     
     if current_mode == 'auto':
-        # Jika mode AUTO: Langsung tawarkan TTS
         kb = [[InlineKeyboardButton("🗣️ Jadikan Suara (TTS)", callback_data=f'setmode_tts_{data_id}')],
               [InlineKeyboardButton("🔙 Selesai (Menu Utama)", callback_data='done')]]
         await message.reply_text("Lanjut jadikan suara?", reply_markup=InlineKeyboardMarkup(kb))
@@ -317,14 +311,12 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     parts = data.split('_')
     action = parts[0]
 
-    # ACTION SUMMARIZE
     if action == 'sum':
         data_id = parts[1]
         raw = context.user_data.get(f'text_{data_id}')
         if not raw: await query.edit_message_text("⚠️ Data Expired."); return
         await execute_summarize(update, context, data_id, raw, is_final=False)
 
-    # ACTION LANG
     elif action == 'lang':
         lang_code = parts[1]
         mode_flag = parts[2]
@@ -343,7 +335,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                InlineKeyboardButton("👨 Pria", callback_data=f'proc_{lang_code}_{mode_flag}_male_{data_id}')]]
         await query.edit_message_text(f"Pilih Suara ({lang_name}):", reply_markup=InlineKeyboardMarkup(kb))
 
-    # ACTION PROCESS TTS
     elif action == 'proc':
         lang = parts[1]
         mode_flag = parts[2]
