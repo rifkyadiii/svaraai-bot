@@ -93,7 +93,7 @@ async def send_text_result(message, text, title=""):
     if title:
         await message.reply_text(f"📝 **{title}** | {stats}:", parse_mode='Markdown')
     if w_count > config.MAX_WORDS_IN_CHAT:
-        fname = "hasil_teks.txt"
+        fname = "/tmp/hasil_teks.txt"
         with open(fname, 'w', encoding='utf-8') as f: f.write(text)
         await message.reply_document(open(fname, 'rb'), caption=f"📄 Isi Teks Lengkap {stats}")
         try: os.remove(fname)
@@ -170,7 +170,7 @@ async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if ext not in ['.pdf', '.docx', '.txt']: await update.message.reply_text("❌ Format salah."); return
         status = await update.message.reply_text("⏳ **Membaca Dokumen**\n`[░░░░░░░░░░] 0%`", parse_mode='Markdown')
         f = await doc.get_file()
-        path = f"temp_{doc.file_unique_id}{ext}"
+        path = f"/tmp/temp_{doc.file_unique_id}{ext}"
         await f.download_to_drive(path)
         text_result = await processing_with_bar(context, status, "⏳ **Membaca Dokumen**", services.extract_document_content, path)
         if os.path.exists(path): os.remove(path)

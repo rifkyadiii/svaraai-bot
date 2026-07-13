@@ -31,7 +31,7 @@ async def api_ocr(file: UploadFile = File(...)):
 # --- 2. ENDPOINT EXTRACT FILE (PDF/DOCX -> Teks) ---
 @router.post("/api/extract")
 async def api_extract(file: UploadFile = File(...)):
-    temp_path = f"temp_api_{uuid.uuid4()}_{file.filename}"
+    temp_path = f"/tmp/temp_api_{uuid.uuid4()}_{file.filename}"
     try:
         # Simpan file upload ke disk sementara
         with open(temp_path, "wb") as buffer:
@@ -81,7 +81,7 @@ async def api_tts(
     try:
         # Generate Audio
         # Gunakan 'api_user' sebagai ID dummy
-        filename = await services.generate_audio(text, lang, gender, f"api_{uuid.uuid4()}")
+        filename = await services.generate_audio_long(text, lang, gender, f"api_{uuid.uuid4()}")
 
         if not filename:
             raise HTTPException(status_code=500, detail="Gagal generate audio.")

@@ -170,7 +170,7 @@ async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, p
             if progress_callback:
                 await progress_callback(i + 1, total_chunks)
 
-            temp_file = f"temp_{user_id}_part{i}.mp3"
+            temp_file = f"/tmp/temp_{user_id}_part{i}.mp3"
             
             # RETRY LOGIC UNTUK TTS
             max_retries = 3
@@ -196,7 +196,7 @@ async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, p
             return None
 
         # Merge
-        final_filename = f"audio_{user_id}_final.mp3"
+        final_filename = f"/tmp/audio_{user_id}_final.mp3"
         with open(final_filename, 'wb') as outfile:
             for f_path in temp_files:
                 if os.path.exists(f_path):
