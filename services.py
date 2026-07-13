@@ -3,7 +3,7 @@ import time
 import google.generativeai as genai
 from PIL import Image
 import io
-import edge_tts
+from google.cloud import texttospeech
 import PyPDF2
 import docx
 import config
@@ -152,50 +152,62 @@ async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, p
             print("Error TTS: Teks input kosong.")
             return None
 
+        # Inisialisasi Client TTS Google
+        client = texttospeech.TextToSpeechAsyncClient()
+
+        # Ambil nama voice dari config
         voice_dict = config.VOICE_MAPPING.get(lang, config.VOICE_MAPPING['en'])
-        selected_voice = voice_dict.get(gender, voice_dict['female'])
+        voice_name = voice_dict.get(gender, voice_dict['female'])
         
+        # Ekstrak kode bahasa (misal: 'id-ID' dari 'id-ID-Wavenet-A')
+        lang_code = voice_name[:5]
+
+        # Konfigurasi Suara dan Output
+        voice = texttospeech.VoiceSelectionParams(language_code=lang_code, name=voice_name)
+        audio_config = texttospeech.AudioConfig(audio_encoding=texttospeech.AudioEncoding.MP3)
+
         chunks = split_text_smartly(text, config.CHUNK_SIZE)
         total_chunks = len(chunks)
         temp_files = []
 
         if total_chunks == 0:
-            print("Error TTS: Tidak ada chunk teks yang dihasilkan.")
             return None
 
         for i, chunk in enumerate(chunks):
             if not chunk.strip(): continue
             
-            # Update Progress Bar di Telegram 
             if progress_callback:
                 await progress_callback(i + 1, total_chunks)
 
             temp_file = f"/tmp/temp_{user_id}_part{i}.mp3"
             
-            # RETRY LOGIC UNTUK TTS
             max_retries = 3
             for attempt in range(max_retries):
                 try:
-                    communicate = edge_tts.Communicate(chunk, selected_voice)
-                    await communicate.save(temp_file)
-                    # Cek size file
-                    if os.path.getsize(temp_file) > 0:
+                    synthesis_input = texttospeech.SynthesisInput(text=chunk)
+                    
+                    # Request ke Google
+                    response = await client.synthesize_speech(
+                        input=synthesis_input, voice=voice, audio_config=audio_config
+                    )
+                    
+                    # Simpan chunk ke file
+                    with open(temp_file, "wb") as out:
+                        out.write(response.audio_content)
+                        
+                    if os.path.exists(temp_file) and os.path.getsize(temp_file) > 0:
                         temp_files.append(temp_file)
-                        break # Sukses, keluar loop retry
-                    else:
-                        print(f"Warning: Chunk {i} 0 bytes. Retry {attempt+1}...")
+                        break 
                 except Exception as e:
-                    print(f"Error Chunk {i} (Percobaan {attempt+1}): {e}")
+                    print(f"Error Chunk {i} GCP (Percobaan {attempt+1}): {e}")
                     if attempt == max_retries - 1:
                         print(f"Gagal total pada chunk {i}")
                     time.sleep(1)
 
-        # Cek apakah ada file yang berhasil dibuat
         if not temp_files:
-            print("Error TTS: Tidak ada file audio yang berhasil dibuat.")
             return None
 
-        # Merge
+        # Merge semua file potongan audio
         final_filename = f"/tmp/audio_{user_id}_final.mp3"
         with open(final_filename, 'wb') as outfile:
             for f_path in temp_files:
@@ -207,7 +219,7 @@ async def generate_audio_long(text: str, lang: str, gender: str, user_id: str, p
         return final_filename
 
     except Exception as e:
-        print(f"CRITICAL Error TTS Long: {e}")
+        print(f"CRITICAL Error TTS Long (GCP): {e}")
         return None
 
 # --- 5. FILE EXTRACTOR ---

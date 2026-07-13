@@ -25,9 +25,9 @@ MAX_FILE_SIZE_MB: Final[int] = 20
 
 # --- MAPPING BAHASA UNTUK TTS ---
 VOICE_MAPPING: Final[Dict[str, Dict[str, str]]] = {
-    'id': {'female': 'id-ID-GadisNeural', 'male': 'id-ID-ArdiNeural'},
-    'en': {'female': 'en-US-JennyNeural', 'male': 'en-US-ChristopherNeural'},
-    'ja': {'female': 'ja-JP-NanamiNeural', 'male': 'ja-JP-KeitaNeural'},
-    'ko': {'female': 'ko-KR-SunHiNeural', 'male': 'ko-KR-InJoonNeural'},
-    'ar': {'female': 'ar-SA-ZariyahNeural', 'male': 'ar-SA-HamedNeural'}
+    'id': {'female': 'id-ID-Standard-A', 'male': 'id-ID-Standard-B'},
+    'en': {'female': 'en-US-Standard-C', 'male': 'en-US-Standard-D'},
+    'ja': {'female': 'ja-JP-Standard-A', 'male': 'ja-JP-Standard-B'},
+    'ko': {'female': 'ko-KR-Standard-A', 'male': 'ko-KR-Standard-C'},
+    'ar': {'female': 'ar-XA-Standard-A', 'male': 'ar-XA-Standard-B'}
 }
